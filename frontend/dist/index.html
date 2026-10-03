@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VKSMVeditorPro</title>
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        /* Style cho nút Bản quyền */
+        .btn-copyright {
+            background: transparent;
+            border: 1px solid var(--line, #333);
+            color: var(--text, #ddd);
+            padding: 5px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 10px;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-copyright:hover {
+            background: var(--accent, #ff5c38);
+            color: #fff;
+            border-color: var(--accent, #ff5c38);
+        }
+
+        /* Modal Bản quyền */
+        .copyright-modal .modal-body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 16px;
+            padding: 24px;
+        }
+        .copyright-modal .author-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent, #ff5c38);
+            box-shadow: 0 4px 20px rgba(255, 92, 56, 0.3);
+            cursor: zoom-in;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .copyright-modal .author-img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 28px rgba(255, 92, 56, 0.5);
+        }
+        .copyright-modal .author-img:active {
+            transform: scale(0.98);
+        }
+        .copyright-modal .author-img-fallback {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: var(--bg2, #1e1e24);
+            border: 3px solid var(--accent, #ff5c38);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: var(--accent, #ff5c38);
+            cursor: zoom-in;
+            transition: transform 0.25s ease;
+        }
+        .copyright-modal .author-img-fallback:hover {
+            transform: scale(1.05);
+        }
+        .copyright-modal .author-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text, #fff);
+            margin: 0;
+        }
+        .copyright-modal .author-role {
+            font-size: 13px;
+            color: var(--muted, #999);
+            margin: 4px 0 0 0;
+        }
+        .copyright-modal .contact-info {
+            font-size: 13px;
+            color: var(--text, #ddd);
+            line-height: 1.8;
+            background: var(--bg2, #1e1e24);
+            padding: 12px 20px;
+            border-radius: 8px;
+            width: 100%;
+            text-align: left;
+        }
+        .copyright-modal .contact-info a {
+            color: var(--accent, #ff5c38);
+            text-decoration: none;
+        }
+        .copyright-modal .contact-info a:hover {
+            text-decoration: underline;
+        }
+        .copyright-modal .license-info {
+            font-size: 12px;
+            color: var(--muted, #999);
+            line-height: 1.8;
+            text-align: left;
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg2, #1e1e24);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent, #ff5c38);
+        }
+        .copyright-modal .license-info strong {
+            color: var(--text, #fff);
+        }
+        .copyright-modal .license-info code {
+            background: var(--bg3, #2a2a32);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: var(--accent, #ff5c38);
+        }
+        .copyright-modal .license-info a {
+            color: var(--accent, #ff5c38);
+            text-decoration: none;
+        }
+        .copyright-modal .license-info a:hover {
+            text-decoration: underline;
+        }
+        .copyright-modal .modal {
+            max-width: 520px;
+        }
+        .copyright-modal .divider {
+            width: 100%;
+            height: 1px;
+            background: var(--line, #333);
+            margin: 4px 0;
+        }
+        /* Gợi ý zoom ảnh */
+        .copyright-modal .zoom-hint {
+            font-size: 11px;
+            color: var(--muted, #999);
+            margin-top: -8px;
+            font-style: italic;
+            opacity: 0.8;
+        }
+
+        /* ═══════════ LIGHTBOX XEM ẢNH FULL ═══════════ */
+        .lightbox {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(0, 0, 0, 0.94);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 40px;
+            box-sizing: border-box;
+        }
+        .lightbox.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .lightbox-img {
+            max-width: 90vw;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 20px 80px rgba(255, 92, 56, 0.4);
+            transform: scale(0.85);
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: zoom-out;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+        .lightbox.show .lightbox-img {
+            transform: scale(1);
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 92, 56, 0.9);
+            color: #fff;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 100000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        .lightbox-close:hover {
+            background: #ff5c38;
+            transform: rotate(90deg) scale(1.1);
+        }
+        .lightbox-caption {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 92, 56, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .lightbox-hint {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 6px 12px;
+            border-radius: 6px;
+            pointer-events: none;
+        }
+
+        /* Hiệu ứng loading ảnh trong lightbox */
+        .lightbox-loading {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 92, 56, 0.3);
+            border-top-color: #ff5c38;
+            border-radius: 50%;
+            animation: lbSpin 0.8s linear infinite;
+        }
+        @keyframes lbSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive cho mobile */
+        @media (max-width: 600px) {
+            .lightbox { padding: 16px; }
+            .lightbox-close { top: 12px; right: 12px; width: 38px; height: 38px; font-size: 16px; }
+            .lightbox-hint { display: none; }
+            .lightbox-caption { font-size: 12px; padding: 6px 14px; }
+            .copyright-modal .modal-body { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app" data-wails-drop-target="true">
+
+        <!-- ═══════════ THANH CÔNG CỤ ═══════════ -->
+        <header id="toolbar">
+            <div class="brand">
+                <svg width="22" height="22" viewBox="0 0 24 24"><rect width="24" height="24" rx="6" fill="#ff5c38"/><path d="M9 6.5v11l9-5.5z" fill="#141417"/></svg>
+                <span>VKSMV<b>editor</b>PRO</span>
+                <button id="btn-copyright" class="btn-copyright" title="Thông tin bản quyền & tác giả">
+                    © Bản quyền
+                </button>
+            </div>
+            <div class="tb-group">
+                <button id="btn-new" class="tb-btn" title="Tạo dự án trắng">📄 Mới</button>
+                <button id="btn-open" class="tb-btn" title="Mở dự án .vksproj">📂 Mở</button>
+                <button id="btn-save" class="tb-btn" title="Lưu dự án">💾 Lưu</button>
+            </div>
+            <div class="tb-sep"></div>
+            <button id="btn-import" class="tb-btn accent" title="Nhập video / ảnh / âm thanh">＋ Nhập tư liệu</button>
+            <div class="tb-sep"></div>
+            <button id="btn-overlays" class="tb-btn" title="Lớp phủ: chữ động, hình vẽ, video PiP + tách nền xanh">🪄 Lớp phủ</button>
+            <button id="btn-trans" class="tb-btn" title="Thư viện hiệu ứng chuyển cảnh giữa 2 clip: hòa mềm, tan biến, trượt, đẩy, mống…">🎬 Chuyển cảnh</button>
+            <button id="btn-subs" class="tb-btn" title="Phụ đề SRT + AI">💬 Phụ đề</button>
+            <button id="btn-tools" class="tb-btn" title="TTS, cắt nhanh, QC, AI, proxy…">🧰 Công cụ</button>
+            <div class="tb-sep"></div>
+            <button id="btn-preview" class="tb-btn" title="Render nhanh bản xem trước 540p">▶ Xem trước</button>
+            <div class="tb-flex"></div>
+            <span id="job-status" class="job-status"></span>
+            <button id="btn-keys" class="tb-btn ghost" title="Bảng phím tắt (?)">⌨ Phím tắt</button>
+            <button id="btn-selftest" class="tb-btn ghost" title="Kiểm tra engine dựng video">🩺 Tự kiểm tra</button>
+            <button id="btn-export" class="tb-btn export" title="Xuất video thành phẩm">⬇ Xuất video</button>
+        </header>
+
+        <!-- ═══════════ KHU VỰC CHÍNH ═══════════ -->
+        <main id="main">
+
+            <!-- Thư viện tư liệu -->
+            <aside id="library">
+                <div class="panel-head">
+                    <span class="head-title">Thư viện tư liệu</span>
+                    <span style="display:flex;gap:5px">
+                        <button id="btn-import-2" class="mini-btn" title="Nhập thêm">＋</button>
+                        <button id="lib-collapse" class="collapse-btn" title="Thu gọn thư viện (kéo vạch giữa để mở lại)">«</button>
+                    </span>
+                </div>
+                <div id="library-list" class="library-list">
+                    <div class="empty-hint" id="library-empty">
+                        <div class="empty-icon">🎞️</div>
+                        <p>Kéo tệp video / ảnh vào đây<br>hoặc bấm <b>Nhập tư liệu</b></p>
+                    </div>
+                </div>
+                <div class="panel-foot">
+                    <span id="library-count">0 tư liệu</span>
+                </div>
+            </aside>
+
+            <!-- v1.2.5: vạch kéo giãn Thư viện (nhấp đúp = về mặc định) -->
+            <div class="vdivider" id="div-lib" title="⇔ Kéo để co giãn Thư viện · nhấp đúp = mặc định"></div>
+
+            <!-- Màn hình xem trước -->
+            <section id="preview-area">
+                <div class="panel-head">
+                    <span class="head-title">Xem trước</span>
+                    <span style="display:flex;gap:6px;align-items:center">
+                        <div class="seg" id="preview-mode">
+                            <button data-mode="frame" class="active">Khung</button>
+                            <button data-mode="video">Bản render</button>
+                        </div>
+                        <button id="btn-snap-png" class="mini-btn" title="Lưu khung hình đang xem thành tệp PNG">📷 Lưu khung</button>
+                    </span>
+                </div>
+                <div id="preview-stage" class="preview-stage">
+                    <div id="frame-view" class="frame-view">
+                        <img id="frame-img" alt="Khung xem trước" draggable="false">
+                        <div id="ov-preview" class="ov-preview" title="Lớp phủ xem gần đúng — «Xem trước»/«Xuất video» để render chính xác"></div>
+                        <div class="frame-loader" id="frame-loader" hidden>Đang dựng khung…</div>
+                        <div class="frame-empty" id="frame-empty">Chọn một clip trên timeline để xem khung</div>
+                    </div>
+                    <video id="preview-video" controls hidden></video>
+                </div>
+                <!-- v1.3.0: thanh điều khiển phát — Play/Stop chính thức ở khung xem trước -->
+                <div id="transport">
+                    <button id="btn-play" class="mini-btn play" title="Phát / Dừng (Space)">▶</button>
+                    <button id="btn-prev-frame" class="mini-btn" title="Lùi 1 khung (←)">◀|</button>
+                    <button id="btn-next-frame" class="mini-btn" title="Tới 1 khung (→)">|▶</button>
+                    <button id="btn-tl-start-t" class="mini-btn" title="Về đầu (Home)">⏮</button>
+                    <button id="btn-tl-end-t" class="mini-btn" title="Đến cuối (End)">⏭</button>
+                    <span id="transport-time" class="tl-time">00:00.0 / 00:00.0</span>
+                    <span class="tl-dim" id="transport-mode">khung</span>
+                </div>
+                <div class="preview-info" id="preview-info">—</div>
+            </section>
+
+            <!-- v1.2.5: vạch kéo giãn Thuộc tính (nhấp đúp = về mặc định) -->
+            <div class="vdivider" id="div-props" title="⇔ Kéo để co giãn Thuộc tính · nhấp đúp = mặc định"></div>
+
+            <!-- Thuộc tính clip -->
+            <aside id="props">
+                <div class="panel-head">
+                    <span class="head-title">Thuộc tính</span>
+                    <button id="props-collapse" class="collapse-btn" title="Thu gọn thuộc tính (kéo vạch giữa để mở lại)">»</button>
+                </div>
+                <div id="props-body" class="props-body">
+                    <div class="empty-hint">
+                        <div class="empty-icon">🎚️</div>
+                        <p>Chọn một clip trên timeline<br>để chỉnh sửa</p>
+                    </div>
+                </div>
+            </aside>
+        </main>
+
+        <!-- v1.2.5: vạch kéo chiều cao timeline (nhấp đúp = về mặc định) -->
+        <div class="hdivider" id="div-tl" title="⇕ Kéo để thay đổi chiều cao timeline · nhấp đúp = mặc định"></div>
+
+        <!-- ═══════════ TIMELINE ═══════════ -->
+        <section id="timeline-section">
+            <div class="tl-toolbar">
+                <div class="seg" id="tl-tools" title="Công cụ timeline">
+                    <button data-tool="select" class="active" title="Công cụ chọn — V: chọn/dời/xén clip">↖ Chọn (V)</button>
+                    <button data-tool="razor" title="Công cụ dao — C: bấm vào clip để cắt tại chỗ (Ctrl+B = cắt tại con trỏ)">🗡 Dao (C)</button>
+                </div>
+                <button id="btn-snap" class="mini-btn active" title="Hút nam châm: viền clip tự dính con trỏ/viền clip khác/ranh giây khi kéo">🧲</button>
+                <button id="btn-split" class="mini-btn wide" title="Tách clip tại con trỏ (S hoặc Ctrl+B)">✂ Tách</button>
+                <button id="btn-delete" class="mini-btn wide danger" title="Xoá clip đang chọn (Del)">🗑 Xoá</button>
+                <div class="tb-sep"></div>
+                <button id="btn-tl-start" class="mini-btn" title="Về đầu timeline (Home)">⏮</button>
+                <button id="btn-tl-in" class="mini-btn" title="Nhảy tới ĐẦU clip đang chọn (Shift+I)">⇤In</button>
+                <button id="btn-tl-out" class="mini-btn" title="Nhảy tới CUỐI clip đang chọn (Shift+O)">Out⇥</button>
+                <button id="btn-tl-end" class="mini-btn" title="Đến cuối timeline (End)">⏭</button>
+                <div class="tb-sep"></div>
+                <button id="btn-undo" class="mini-btn" title="Hoàn tác bước vừa rồi (Ctrl+Z)">↶</button>
+                <button id="btn-redo" class="mini-btn" title="Làm lại bước vừa hoàn tác (Ctrl+Y)">↷</button>
+                <div class="tb-sep"></div>
+                <button id="btn-back" class="mini-btn" title="Đưa clip sang trái">◀</button>
+                <button id="btn-fwd" class="mini-btn" title="Đưa clip sang phải">▶</button>
+                <div class="tb-sep"></div>
+                <button id="btn-tl-lock" class="mini-btn" title="🔒 Khóa timeline: chặn mọi sửa đổi nhầm lẫn (bấm lại để mở)">🔒</button>
+                <button id="btn-tl-mute" class="mini-btn" title="🔇 Tắt tiếng TOÀN BỘ timeline khi dựng/xuất">🔇</button>
+                <button id="btn-tl-ovis" class="mini-btn active" title="👁 Bật/tắt hiện lớp phủ (chữ, hình, PiP) khi dựng">👁</button>
+                <div class="tb-sep"></div>
+                <span class="tl-time" id="tl-playhead-time">00:00.0</span>
+                <span class="tl-dim">/</span>
+                <span class="tl-time dim" id="tl-total-time">00:00.0</span>
+                <div class="tb-flex"></div>
+                <span class="tl-dim" id="tl-hint">Kéo viền clip để cắt · kéo thân để dời · Alt+kéo = Slip · thả tư liệu vào V2 = lớp phủ PiP</span>
+                <div class="tb-flex"></div>
+                <button id="zoom-out" class="mini-btn" title="Thu nhỏ timeline (Ctrl+lăn chuột là nhanh nhất)">−</button>
+                <input type="range" id="zoom-slider" min="4" max="400" value="48" step="1" title="Độ zoom timeline">
+                <button id="zoom-in" class="mini-btn" title="Phóng to timeline (Ctrl+lăn chuột là nhanh nhất)">＋</button>
+                <button id="zoom-fit" class="mini-btn wide" title="Vừa khít màn hình — xem toàn bộ timeline">⤢ Vừa khít</button>
+            </div>
+            <div id="tl-body">
+                <div id="tl-heads">
+                    <div class="tl-head" style="height:48px">
+                        <span class="th-name" title="Track lớp phủ: video PiP / chữ / hình — vị trí tự do">V2 · Lớp phủ</span>
+                        <button id="hd-ovis" class="hd-btn" title="Ẩn/hiện lớp phủ V2 khi dựng (giống nút 👁 trên thanh công cụ)">👁</button>
+                    </div>
+                    <div class="tl-head" style="height:88px">
+                        <span class="th-name" title="Track video chính — các clip nối tiếp">V1 · Video</span>
+                    </div>
+                    <div class="tl-head" style="height:56px">
+                        <span class="th-name" title="Track âm thanh ĐỘC LẬP: kéo mp3/wav vào đây — nhạc nền song song video (v1.3.0)">A1 · Âm thanh</span>
+                        <button id="hd-mute" class="hd-btn" title="Tắt/bật tiếng toàn bộ timeline (giống nút 🔇 trên thanh công cụ)">🔇</button>
+                    </div>
+                </div>
+                <div id="tl-scroll">
+                    <canvas id="timeline-canvas" tabindex="0"></canvas>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ═══════════ MODAL BẢN QUYỀN ═══════════ -->
+    <div class="modal-mask copyright-modal" id="copyright-modal" hidden>
+        <div class="modal">
+            <div class="modal-head">
+                <span>© Thông tin bản quyền &amp; tác giả</span>
+                <button class="mini-btn" id="copyright-close">✕</button>
+            </div>
+            <div class="modal-body">
+                <!-- Ảnh tác giả (click để zoom full) -->
+                <img src="tacgia.png" alt="Tác giả — Nguyễn Hữu Cường" class="author-img"
+                     id="author-img"
+                     title="Click để xem ảnh full"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="author-img-fallback" id="author-img-fallback"
+                     style="display:none" title="Click để xem ảnh full">👨‍💻</div>
+                <div class="zoom-hint">🔍 Click vào ảnh để xem full</div>
+
+                <h3 class="author-name">Nguyễn Hữu Cường</h3>
+                <p class="author-role">Chuyên viên KTCC CY — Bộ phận Chuyển đổi số<br>VKSND TP Đà Nẵng</p>
+
+                <div class="divider"></div>
+
+                <div class="contact-info">
+                    <strong>📧 Liên hệ:</strong><br>
+                    Email: <a href="mailto:doremon.dn01@gmail.com">doremon.dn01@gmail.com</a><br>
+                    Phone: <a href="tel:0905666624">0905 6666 24</a>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="license-info">
+                    <strong>📜 Thông tin bản quyền &amp; giấy phép:</strong><br><br>
+                    • Mã nguồn <strong>VKSMVeditorPro</strong>: Lập trình và phát triển ứng dụng bởi
+                    <strong>Nguyễn Hữu Cường</strong> (dự án riêng).<br>
+                    • Thư viện <strong>moviego v2</strong> (<a href="https://github.com/mowshon/moviego" target="_blank" rel="noopener">github.com/mowshon/moviego</a>): <strong>MIT License</strong>.<br>
+                    • Tệp <code>ffmpeg.exe</code> / <code>ffprobe.exe</code> (build essentials của gyan.dev): <strong>GPL v3</strong> —
+                    được phân phối như tệp nhị phân độc lập (tách khỏi ứng dụng), đúng tinh thần
+                    "mere aggregation".<br>
+                    • Nguồn FFmpeg: <a href="https://www.gyan.dev/ffmpeg/builds/" target="_blank" rel="noopener">https://www.gyan.dev/ffmpeg/builds/</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ LIGHTBOX XEM ẢNH FULL ═══════════ -->
+    <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-label="Xem ảnh tác giả">
+        <div class="lightbox-loading" id="lightbox-loading" hidden></div>
+        <button class="lightbox-close" id="lightbox-close" title="Đóng (ESC)" aria-label="Đóng">✕</button>
+        <div class="lightbox-hint">💡 Click ảnh hoặc nhấn ESC để đóng</div>
+        <img src="" alt="Ảnh tác giả — Nguyễn Hữu Cường" class="lightbox-img" id="lightbox-img" draggable="false">
+        <div class="lightbox-caption" id="lightbox-caption">Nguyễn Hữu Cường — VKSMVeditorPro</div>
+    </div>
+
+    <!-- ═══════════ MODAL XUẤT VIDEO ═══════════ -->
+    <div class="modal-mask" id="export-modal" hidden>
+        <div class="modal">
+            <div class="modal-head"><span>Xuất video</span><button class="mini-btn" id="export-close">✕</button></div>
+            <div class="modal-body" id="export-form">
+                <div class="field">
+                    <label>Định dạng</label>
+                    <div class="seg" id="exp-format">
+                        <button data-v="mp4" class="active">MP4 (H.264)</button>
+                        <button data-v="gif">GIF động</button>
+                        <button data-v="movalpha">MOV trong suốt</button>
+                    </div>
+                </div>
+                <div class="field" id="field-gpu">
+                    <label>Tăng tốc GPU (Windows)</label>
+                    <select id="exp-gpu">
+                        <option value="">CPU (ổn định nhất)</option>
+                        <option value="nvenc">NVIDIA NVENC</option>
+                        <option value="qsv">Intel QSV</option>
+                    </select>
+                </div>
+                <div class="field" id="field-res">
+                    <label>Độ phân giải</label>
+                    <select id="exp-res"></select>
+                </div>
+                <div class="field" id="field-crf">
+                    <label>Chất lượng — <b id="crf-label">Cân bằng (CRF 20)</b></label>
+                    <input type="range" id="exp-crf" min="14" max="32" value="20" step="1">
+                    <div class="range-marks"><span>Nhỏ gọn</span><span>Cân bằng</span><span>Sắc nét</span></div>
+                </div>
+                <div class="field" id="field-giffps" hidden>
+                    <label>Số khung/giây của GIF — <b id="giffps-label">12</b></label>
+                    <input type="range" id="exp-giffps" min="8" max="24" value="12" step="1">
+                </div>
+                <div class="field">
+                    <label>Nơi lưu</label>
+                    <div class="row">
+                        <input type="text" id="exp-path" readonly placeholder="Chưa chọn…">
+                        <button id="exp-browse" class="mini-btn wide">Chọn…</button>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="exp-start" class="tb-btn export">Bắt đầu xuất</button>
+                </div>
+            </div>
+            <div class="modal-body" id="export-progress" hidden>
+                <div class="progress-wrap">
+                    <div class="progress"><div class="progress-fill" id="exp-fill"></div></div>
+                    <div class="progress-text" id="exp-text">Chuẩn bị…</div>
+                </div>
+                <div class="modal-actions">
+                    <button id="exp-cancel" class="tb-btn">Huỷ</button>
+                    <button id="exp-open" class="tb-btn" hidden>Mở thư mục</button>
+                    <button id="exp-close2" class="tb-btn" hidden>Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODAL TỰ KIỂM TRA ═══════════ -->
+    <div class="modal-mask" id="selftest-modal" hidden>
+        <div class="modal wide">
+            <div class="modal-head"><span>Tự kiểm tra engine dựng video</span><button class="mini-btn" id="selftest-close">✕</button></div>
+            <div class="modal-body">
+                <pre id="selftest-log" class="selftest-log">Bấm «Chạy kiểm tra» để bắt đầu…</pre>
+                <div class="modal-actions">
+                    <button id="selftest-run" class="tb-btn accent">Chạy kiểm tra</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODAL LỚP PHỦ (v1.1) ═══════════ -->
+    <div class="modal-mask" id="overlay-modal" hidden>
+        <div class="modal wide">
+            <div class="modal-head"><span>Lớp phủ — chữ / hình / video PiP</span><button class="mini-btn" id="ov-close">✕</button></div>
+            <div class="modal-body">
+                <div class="btn-row" style="margin-bottom:12px">
+                    <button class="tb-btn" id="ov-add-text">＋ Chữ / tiêu đề</button>
+                    <button class="tb-btn" id="ov-add-shape">＋ Hình vẽ</button>
+                    <button class="tb-btn" id="ov-add-media">＋ Video/ ảnh PiP</button>
+                </div>
+                <div id="ov-list" class="ov-list"></div>
+                <div id="ov-editor" hidden></div>
+                <div class="tl-dim" style="margin-top:10px">Lớp phủ hiện trong lane dưới timeline — bấm vào khối để sửa nhanh.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODAL CHUYỂN CẢNH (v1.2.6) ═══════════ -->
+    <div class="modal-mask" id="trans-modal" hidden>
+        <div class="modal wide">
+            <div class="modal-head"><span>🎬 Hiệu ứng chuyển cảnh</span><button class="mini-btn" id="trans-close">✕</button></div>
+            <div class="modal-body">
+                <div class="tl-dim" style="margin-bottom:10px">Chọn một clip trên timeline rồi bấm 1 hiệu ứng → gắn vào mối nối <b>SAU clip đó</b>. Xem thêm: chọn clip → panel Thuộc tính → «Chuyển cảnh sau clip này».</div>
+                <div id="trans-gallery" class="trans-gallery"></div>
+                <div class="row" style="margin-top:14px;align-items:flex-end">
+                    <div class="field grow">
+                        <label>Thời lượng chuyển cảnh — <b id="trans-dur-label">0.8s</b></label>
+                        <input type="range" id="trans-dur" min="200" max="3000" step="100" value="800">
+                    </div>
+                    <div class="btn-row" style="padding-bottom:2px">
+                        <button class="tb-btn" id="trans-all" title="Gắn hiệu ứng đang chọn vào TẤT CẢ mối nối giữa các clip">⧉ Áp cho mọi mối nối</button>
+                        <button class="tb-btn" id="trans-clear-all" title="Gỡ toàn bộ chuyển cảnh">Gỡ hết</button>
+                    </div>
+                </div>
+                <div id="trans-cur" style="margin-top:12px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MENU CHUỘT PHẢI TRÊN TIMELINE (v1.2.6) ═══════════ -->
+    <div id="ctx-menu" hidden></div>
+
+    <!-- ═══════════ MODAL PHỤ ĐỀ (v1.1) ═══════════ -->
+    <div class="modal-mask" id="subs-modal" hidden>
+        <div class="modal wide">
+            <div class="modal-head"><span>Phụ đề</span><button class="mini-btn" id="subs-close">✕</button></div>
+            <div class="modal-body">
+                <div class="btn-row" style="margin-bottom:12px">
+                    <button class="tb-btn accent" id="subs-import">📂 Nhập SRT</button>
+                    <button class="tb-btn" id="subs-export">💾 Xuất SRT</button>
+                    <button class="tb-btn" id="subs-ai-stt">🎙 AI nhận dạng giọng nói</button>
+                    <button class="tb-btn" id="subs-ai-translate">🌐 AI dịch phụ đề</button>
+                    <button class="mini-btn danger" id="subs-clear">Xoá phụ đề</button>
+                </div>
+                <div id="subs-status" class="tl-dim" style="margin-bottom:10px">Chưa có phụ đề trong dự án.</div>
+                <div class="row" style="margin-bottom:8px">
+                    <label class="check-row grow"><input type="checkbox" id="subs-burn"> Ghi phụ đề lên video khi xuất</label>
+                </div>
+                <div class="row">
+                    <div class="field grow">
+                        <label>Cỡ chữ — <b id="subs-fs-label">42</b></label>
+                        <input type="range" id="subs-fs" min="18" max="120" step="2" value="42">
+                    </div>
+                    <div class="field grow">
+                        <label>Màu chữ</label>
+                        <input type="color" id="subs-color" value="#ffffff" style="width:100%;height:34px;background:var(--bg2);border:1px solid var(--line);border-radius:6px">
+                    </div>
+                    <div class="field" style="width:130px">
+                        <label>&nbsp;</label>
+                        <button class="tb-btn wide" id="subs-style-save">Áp style</button>
+                    </div>
+                </div>
+                <div id="subs-cues" class="subs-cues"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODAL CÔNG CỤ (v1.1) ═══════════ -->
+    <div class="modal-mask" id="tools-modal" hidden>
+        <div class="modal wide">
+            <div class="modal-head"><span>Công cụ &amp; tự động hoá</span><button class="mini-btn" id="tools-close">✕</button></div>
+            <div class="modal-body">
+
+                <details class="tool-sec">
+                    <summary>🎙 Tạo giọng đọc AI (TTS — Windows SAPI, offline)</summary>
+                    <div class="tool-body">
+                        <div class="field"><label>Nội dung đọc</label>
+                            <textarea id="tts-text" rows="3" placeholder="Nhập văn bản cần đọc thành giọng nói…"></textarea></div>
+                        <div class="row">
+                            <div class="field grow"><label>Giọng đọc</label><select id="tts-voice"></select></div>
+                            <div class="field" style="width:110px"><label>Tốc độ (<b id="tts-rate-label">0</b>)</label>
+                                <input type="range" id="tts-rate" min="-10" max="10" step="1" value="0"></div>
+                            <div class="field" style="width:150px"><label>&nbsp;</label>
+                                <label class="check-row"><input type="checkbox" id="tts-addtl" checked> Thêm vào timeline</label></div>
+                        </div>
+                        <button class="tb-btn accent" id="tts-go">Tạo giọng đọc</button>
+                    </div>
+                </details>
+
+                <details class="tool-sec">
+                    <summary>✂️ Cắt nhanh không re-encode (stream copy)</summary>
+                    <div class="tool-body">
+                        <div class="tl-dim" style="margin-bottom:8px">Cắt tức thì, không mất chất — chính xác tới keyframe. Cần chọn tư liệu trong thư viện.</div>
+                        <div class="row">
+                            <div class="field grow"><label>Tư liệu</label><select id="fc-asset"></select></div>
+                            <div class="field" style="width:110px"><label>Từ (s)</label><input type="number" id="fc-in" value="0" step="0.5" min="0"></div>
+                            <div class="field" style="width:110px"><label>Đến (s)</label><input type="number" id="fc-out" value="5" step="0.5" min="0"></div>
+                        </div>
+                        <div class="btn-row">
+                            <button class="tb-btn" id="fc-go">Cắt nhanh</button>
+                            <button class="tb-btn" id="cc-go">Nối nhanh (theo thứ tự đã chọn 2+ file)</button>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="tool-sec">
+                    <summary>🔇 Cắt khoảng lặng tự động (clip đang chọn)</summary>
+                    <div class="tool-body">
+                        <div class="row">
+                            <div class="field grow"><label>Ngưỡng tiếng ồn (dB) — <b id="sl-db-label">-40</b></label>
+                                <input type="range" id="sl-db" min="-60" max="-20" step="1" value="-40"></div>
+                            <div class="field" style="width:130px"><label>Lặng tối thiểu (s)</label>
+                                <input type="number" id="sl-min" value="0.5" step="0.1" min="0.1"></div>
+                        </div>
+                        <div class="btn-row">
+                            <button class="tb-btn" id="sl-scan">Quét khoảng lặng</button>
+                            <button class="tb-btn accent" id="sl-apply" disabled>Áp dụng cắt</button>
+                        </div>
+                        <div id="sl-result" class="tl-dim" style="margin-top:8px"></div>
+                    </div>
+                </details>
+
+                <details class="tool-sec">
+                    <summary>🔍 Phân tích cảnh &amp; kiểm tra QC tự động</summary>
+                    <div class="tool-body">
+                        <div class="row">
+                            <div class="field grow"><label>Tư liệu</label><select id="qc-asset"></select></div>
+                            <div class="field" style="width:150px"><label>Ngưỡng cảnh (0..1)</label>
+                                <input type="number" id="qc-th" value="0.4" step="0.05" min="0.1" max="0.9"></div>
+                        </div>
+                        <div class="btn-row">
+                            <button class="tb-btn" id="qc-scenes">Phát hiện cảnh</button>
+                            <button class="tb-btn" id="qc-run">Chạy QC tư liệu</button>
+                            <button class="tb-btn" id="qc-run-prev">QC bản xem trước</button>
+                        </div>
+                        <div id="qc-result" class="tool-report"></div>
+                    </div>
+                </details>
+
+                <details class="tool-sec">
+                    <summary>🤖 AI thông minh — cấu hình endpoint (OpenAI-compatible)</summary>
+                    <div class="tool-body">
+                        <div class="row">
+                            <div class="field grow"><label>Địa chỉ máy chủ (Base URL)</label>
+                                <input type="text" id="ai-url" placeholder="https://api.openai.com/v1"></div>
+                            <div class="field grow"><label>API Key</label>
+                                <input type="password" id="ai-key" placeholder="(để trống = giữ key cũ)"></div>
+                        </div>
+                        <div class="row">
+                            <div class="field grow"><label>Model chat (dịch / phân tích)</label>
+                                <input type="text" id="ai-model" placeholder="gpt-4o-mini"></div>
+                            <div class="field grow"><label>Model STT</label>
+                                <input type="text" id="ai-asr" placeholder="whisper-1"></div>
+                        </div>
+                        <button class="tb-btn accent" id="ai-save">Lưu cấu hình AI</button>
+                        <hr class="tool-hr">
+                        <div class="field"><label>Hỏi AI về dự án hiện tại (metadata, timeline, phụ đề…)</label>
+                            <textarea id="ai-q" rows="2" placeholder="VD: timeline này phù hợp đăng TikTok không? Có nên cắt bớt không?"></textarea></div>
+                        <button class="tb-btn" id="ai-ask">Gửi câu hỏi</button>
+                        <div id="ai-answer" class="tool-report"></div>
+                    </div>
+                </details>
+
+                <details class="tool-sec">
+                    <summary>📜 Dựng video theo kịch bản (JSON)</summary>
+                    <div class="tool-body">
+                        <div class="tl-dim" style="margin-bottom:8px">Định dạng: {"items":[{"assetId":"a_…","inMs":0,"outMs":5000,"transition":"crossfade","transitionMs":500}]}. Ảnh dùng "durMs".</div>
+                        <div class="field"><textarea id="sc-json" rows="6" placeholder='{"items":[…]}'></textarea></div>
+                        <div class="btn-row">
+                            <button class="tb-btn" id="sc-sample">Chèn mẫu</button>
+                            <button class="tb-btn accent" id="sc-go">Dựng timeline</button>
+                        </div>
+                    </div>
+                </details>
+
+                <details class="tool-sec">
+                    <summary>📱 Đổi khung dự án + Auto Reframe (16:9 → 9:16 TikTok)</summary>
+                    <div class="tool-body">
+                        <div class="tl-dim" style="margin-bottom:8px">Đổi tỉ lệ khung của toàn bộ dự án. Sang khung đứng: mỗi clip dùng «Vị trí ngang/dọc» trong panel Thuộc tính để chọn vùng khung giữ lại (zoom &gt; 1×).</div>
+                        <div class="btn-row">
+                            <button class="tb-btn" data-canvas="1920x1080">16:9 · 1920×1080</button>
+                            <button class="tb-btn" data-canvas="1080x1920">9:16 · 1080×1920 (TikTok/Shorts)</button>
+                            <button class="tb-btn" data-canvas="1080x1080">1:1 · 1080×1080 (Feed)</button>
+                            <button class="tb-btn" data-canvas="1080x1350">4:5 · 1080×1350</button>
+                        </div>
+                        <div class="btn-row" style="margin-top:8px">
+                            <button class="tb-btn accent" id="ar-center">⌖ Auto Reframe cơ bản: 9:16 + căn giữa mọi clip</button>
+                            <button class="tb-btn" id="ar-restore">↩ Về 16:9 + căn giữa</button>
+                        </div>
+                        <div id="ar-result" class="tool-report"></div>
+                    </div>
+                </details>
+
+                <details class="tool-sec">
+                    <summary>⚡ Proxy 480p cho xem trước mượt + cập nhật</summary>
+                    <div class="tool-body">
+                        <div class="btn-row">
+                            <button class="tb-btn" id="px-gen">Tạo proxy cho mọi video ≥720p</button>
+                            <button class="tb-btn" id="up-check">Kiểm tra bản cập nhật</button>
+                        </div>
+                        <div class="field" style="margin-top:10px"><label>Repo GitHub kiểm tra cập nhật</label>
+                            <div class="row"><input type="text" id="up-repo" class="grow" placeholder="owner/repo">
+                                <button class="mini-btn" id="up-save">Lưu</button></div>
+                        </div>
+                        <div id="px-up-result" class="tool-report"></div>
+                    </div>
+                </details>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODAL XEM TƯ LIỆU (SOURCE MONITOR — v1.2.3) ═══════════ -->
+    <div class="modal-mask" id="srcmon-modal" hidden>
+        <div class="modal wide">
+            <div class="modal-head"><span>Xem tư liệu gốc</span><button class="mini-btn" id="srcmon-close">✕</button></div>
+            <div class="modal-body">
+                <div id="srcmon-stage" style="background:#000;border-radius:8px;min-height:200px;display:flex;align-items:center;justify-content:center"></div>
+                <div id="srcmon-info" class="tl-dim" style="margin-top:8px">—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ MODAL PHÍM TẮT (v1.2.5) ═══════════ -->
+    <div class="modal-mask" id="keys-modal" hidden>
+        <div class="modal">
+            <div class="modal-head"><span>⌨ Phím tắt</span><button class="mini-btn" id="keys-close">✕</button></div>
+            <div class="modal-body">
+                <table class="keys-table">
+                    <tr><td class="k">Space</td><td>Phát / dừng (khung hoặc bản render)</td></tr>
+                    <tr><td class="k">← / →</td><td>Đưa con trỏ lùi / tới 1 khung (Shift = 1 giây)</td></tr>
+                    <tr><td class="k">Home / End</td><td>Về đầu / cuối timeline</td></tr>
+                    <tr><td class="k">Shift+I / Shift+O</td><td>Nhảy tới đầu / cuối clip đang chọn</td></tr>
+                    <tr><td class="k">I / O</td><td>Đặt điểm ĐẦU / CUỐI clip = con trỏ</td></tr>
+                    <tr><td class="k">V / C</td><td>Công cụ Chọn / Dao</td></tr>
+                    <tr><td class="k">S hoặc Ctrl+B</td><td>Tách clip tại con trỏ</td></tr>
+                    <tr><td class="k">Delete</td><td>Xoá clip / lớp phủ / đoạn âm thanh đang chọn (tự dồn — ghép trơn tru)</td></tr>
+                    <tr><td class="k">Ctrl+D</td><td>Nhân bản clip đang chọn (mới v1.2.6)</td></tr>
+                    <tr><td class="k">Chuột phải</td><td>Menu nhanh trên timeline: tách / nhân bản / xoá / dời / nhạc A1… (mới v1.2.6)</td></tr>
+                    <tr><td class="k">Kéo mp3/wav</td><td>Thả vào track A1 → nhạc nền ĐỘC LẬP song song video (mới v1.3.0)</td></tr>
+                    <tr><td class="k">Ctrl+Z / Ctrl+Y</td><td>Hoàn tác / Làm lại (mới v1.2.5)</td></tr>
+                    <tr><td class="k">Ctrl+L</td><td>Tách âm thanh khỏi clip</td></tr>
+                    <tr><td class="k">Ctrl+lăn chuột</td><td>Thu phóng timeline quanh con trỏ</td></tr>
+                    <tr><td class="k">Lăn chuột</td><td>Cuộn ngang timeline</td></tr>
+                    <tr><td class="k">? hoặc F1</td><td>Mở bảng phím tắt này</td></tr>
+                </table>
+                <p class="tl-dim" style="margin-top:10px">Mẹo: kéo vạch giữa các vùng để co giãn Thư viện / Xem trước / Thuộc tính / chiều cao timeline — nhấp đúp vạch để về mặc định. Bấm « / » trên đầu panel để thu gọn.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="toasts"></div>
+
+    <script src="js/boot.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/layout.js"></script>
+    <script src="js/history.js"></script>
+    <script src="js/timeline.js"></script>
+    <script src="js/panels.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/v11.js"></script>
+    <script src="js/v126.js"></script>
+
+    <!-- ═══════════ SCRIPT XỬ LÝ MODAL BẢN QUYỀN + LIGHTBOX ═══════════ -->
+    <script>
+        (function() {
+            'use strict';
+
+            /* ─────────── Các phần tử DOM ─────────── */
+            var copyrightModal   = document.getElementById('copyright-modal');
+            var btnCopyright     = document.getElementById('btn-copyright');
+            var copyrightClose   = document.getElementById('copyright-close');
+            var authorImg        = document.getElementById('author-img');
+            var authorFallback   = document.getElementById('author-img-fallback');
+            var lightbox         = document.getElementById('lightbox');
+            var lightboxImg      = document.getElementById('lightbox-img');
+            var lightboxClose    = document.getElementById('lightbox-close');
+            var lightboxLoading  = document.getElementById('lightbox-loading');
+            var lightboxCaption  = document.getElementById('lightbox-caption');
+
+            if (!copyrightModal || !btnCopyright) {
+                console.warn('[Copyright] Không tìm thấy phần tử modal hoặc nút bản quyền.');
+                return;
+            }
+
+            /* ═══════════ XỬ LÝ MODAL BẢN QUYỀN ═══════════ */
+
+            function openCopyrightModal() {
+                copyrightModal.hidden = false;
+                document.body.style.overflow = 'hidden';
+                if (copyrightClose) copyrightClose.focus();
+            }
+
+            function closeCopyrightModal() {
+                // Nếu lightbox đang mở thì đóng lightbox trước
+                if (lightbox && lightbox.classList.contains('show')) {
+                    closeLightbox();
+                }
+                copyrightModal.hidden = true;
+                document.body.style.overflow = '';
+                if (btnCopyright) btnCopyright.focus();
+            }
+
+            btnCopyright.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                openCopyrightModal();
+            });
+
+            if (copyrightClose) {
+                copyrightClose.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    closeCopyrightModal();
+                });
+            }
+
+            copyrightModal.addEventListener('click', function(e) {
+                if (e.target === copyrightModal) {
+                    closeCopyrightModal();
+                }
+            });
+
+            /* ═══════════ XỬ LÝ LIGHTBOX XEM ẢNH FULL ═══════════ */
+
+            // Lưu scroll position để khôi phục khi đóng lightbox
+            var savedScrollY = 0;
+
+            /**
+             * Mở lightbox với ảnh full
+             * @param {string} src - Đường dẫn ảnh
+             * @param {string} alt - Mô tả ảnh
+             */
+            function openLightbox(src, alt) {
+                if (!lightbox || !lightboxImg) return;
+
+                savedScrollY = window.scrollY || window.pageYOffset || 0;
+
+                // Hiện loading, ẩn ảnh cũ
+                if (lightboxLoading) lightboxLoading.hidden = false;
+                lightboxImg.style.opacity = '0';
+
+                // Gán src mới
+                lightboxImg.src = src;
+                lightboxImg.alt = alt || 'Ảnh tác giả';
+
+                // Khi ảnh load xong
+                lightboxImg.onload = function() {
+                    if (lightboxLoading) lightboxLoading.hidden = true;
+                    lightboxImg.style.transition = 'opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    lightboxImg.style.opacity = '1';
+                };
+
+                // Nếu ảnh lỗi
+                lightboxImg.onerror = function() {
+                    if (lightboxLoading) lightboxLoading.hidden = true;
+                    lightboxImg.style.opacity = '0';
+                    showToast && showToast('Không thể tải ảnh tác giả', 'error');
+                    closeLightbox();
+                };
+
+                // Hiện lightbox
+                lightbox.hidden = false;
+                lightbox.setAttribute('aria-hidden', 'false');
+                // Force reflow để transition hoạt động
+                void lightbox.offsetWidth;
+                lightbox.classList.add('show');
+
+                // Ngăn cuộn nền
+                document.body.style.overflow = 'hidden';
+
+                // Focus vào nút đóng để hỗ trợ bàn phím
+                setTimeout(function() {
+                    if (lightboxClose) lightboxClose.focus();
+                }, 350);
+            }
+
+            /**
+             * Đóng lightbox
+             */
+            function closeLightbox() {
+                if (!lightbox) return;
+
+                lightbox.classList.remove('show');
+                lightbox.setAttribute('aria-hidden', 'true');
+
+                // Sau khi transition xong thì ẩn hẳn
+                setTimeout(function() {
+                    lightbox.hidden = true;
+                    // Reset ảnh
+                    if (lightboxImg) {
+                        lightboxImg.src = '';
+                        lightboxImg.style.opacity = '1';
+                    }
+                    // Khôi phục scroll nếu copyright modal đã đóng
+                    if (copyrightModal && copyrightModal.hidden) {
+                        document.body.style.overflow = '';
+                    }
+                }, 320);
+
+                // Trả focus về ảnh trong modal
+                if (authorImg && authorImg.style.display !== 'none') {
+                    setTimeout(function() { authorImg.focus(); }, 350);
+                }
+            }
+
+            /**
+             * Lấy đường dẫn ảnh từ phần tử được click
+             */
+            function getImageSrcFromElement(el) {
+                if (el && el.tagName === 'IMG' && el.src) {
+                    return el.src;
+                }
+                // Fallback: dùng đường dẫn tương đối
+                return 'tacgia.png';
+            }
+
+            /**
+             * Lấy alt text từ phần tử
+             */
+            function getAltFromElement(el) {
+                return (el && el.alt) ? el.alt : 'Ảnh tác giả — Nguyễn Hữu Cường';
+            }
+
+            /* ─── Gắn sự kiện click cho ảnh tác giả ─── */
+            if (authorImg) {
+                authorImg.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openLightbox(getImageSrcFromElement(authorImg), getAltFromElement(authorImg));
+                });
+                // Hỗ trợ bàn phím Enter / Space
+                authorImg.setAttribute('tabindex', '0');
+                authorImg.setAttribute('role', 'button');
+                authorImg.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openLightbox(getImageSrcFromElement(authorImg), getAltFromElement(authorImg));
+                    }
+                });
+            }
+
+            /* ─── Gắn sự kiện click cho fallback (emoji) ─── */
+            if (authorFallback) {
+                authorFallback.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Fallback: mở ảnh tacgia.png dù ảnh chính lỗi
+                    openLightbox('tacgia.png', 'Ảnh tác giả — Nguyễn Hữu Cường');
+                });
+                authorFallback.setAttribute('tabindex', '0');
+                authorFallback.setAttribute('role', 'button');
+                authorFallback.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        openLightbox('tacgia.png', 'Ảnh tác giả — Nguyễn Hữu Cường');
+                    }
+                });
+            }
+
+            /* ─── Sự kiện đóng lightbox ─── */
+            if (lightboxClose) {
+                lightboxClose.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeLightbox();
+                });
+            }
+
+            // Click vào ảnh trong lightbox cũng đóng
+            if (lightboxImg) {
+                lightboxImg.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    closeLightbox();
+                });
+            }
+
+            // Click ra ngoài ảnh (vùng nền tối) để đóng
+            if (lightbox) {
+                lightbox.addEventListener('click', function(e) {
+                    // Chỉ đóng khi click vào chính lightbox (không phải ảnh/nút con)
+                    if (e.target === lightbox) {
+                        closeLightbox();
+                    }
+                });
+            }
+
+            /* ═══════════ XỬ LÝ BÀN PHÍM TOÀN CỤC ═══════════ */
+
+            document.addEventListener('keydown', function(e) {
+                // ESC: đóng lightbox trước, nếu không có thì đóng modal
+                if (e.key === 'Escape') {
+                    if (lightbox && lightbox.classList.contains('show')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        closeLightbox();
+                        return;
+                    }
+                    if (!copyrightModal.hidden) {
+                        e.preventDefault();
+                        closeCopyrightModal();
+                    }
+                }
+
+                // Khi lightbox đang mở: chặn các phím tắt khác (tránh trigger app)
+                if (lightbox && lightbox.classList.contains('show')) {
+                    // Cho phép ESC, Tab; chặn các phím khác để không ảnh hưởng editor
+                    if (e.key !== 'Escape' && e.key !== 'Tab') {
+                        e.stopPropagation();
+                    }
+                }
+            }, true); // capture phase để chặn sớm
+
+            /* ═══════════ HỖ TRỢ TOUCH / SWIPE ĐỂ ĐÓNG LIGHTBOX ═══════════ */
+
+            if (lightbox) {
+                var touchStartY = 0;
+                var touchStartTime = 0;
+
+                lightbox.addEventListener('touchstart', function(e) {
+                    if (e.touches.length === 1) {
+                        touchStartY = e.touches[0].clientY;
+                        touchStartTime = Date.now();
+                    }
+                }, { passive: true });
+
+                lightbox.addEventListener('touchend', function(e) {
+                    if (e.changedTouches.length === 1) {
+                        var deltaY = e.changedTouches[0].clientY - touchStartY;
+                        var deltaTime = Date.now() - touchStartTime;
+                        // Vuốt xuống > 100px trong < 500ms → đóng
+                        if (deltaY > 100 && deltaTime < 500) {
+                            closeLightbox();
+                        }
+                    }
+                }, { passive: true });
+            }
+
+            /* ═══════════ PRELOAD ẢNH ĐỂ MỞ NHANH ═══════════ */
+
+            // Preload ảnh tác giả ngay khi DOM sẵn sàng (ẩn)
+            (function preloadAuthorImage() {
+                var preImg = new Image();
+                preImg.src = 'tacgia.png';
+                preImg.onload = function() {
+                    console.log('[Copyright] Ảnh tác giả đã sẵn sàng.');
+                };
+                preImg.onerror = function() {
+                    console.warn('[Copyright] Không tìm thấy tacgia.png — sẽ dùng fallback emoji.');
+                };
+            })();
+
+            /* ═══════════ HELPER: TOAST (nếu có) ═══════════ */
+
+            function showToast(msg, type) {
+                // Tận dụng toast của app nếu có, nếu không thì dùng alert nhẹ
+                if (typeof window.toast === 'function') {
+                    window.toast(msg, type);
+                } else if (typeof window.showToast === 'function') {
+                    window.showToast(msg, type);
+                } else {
+                    console.log('[Toast]', type || 'info', msg);
+                }
+            }
+
+            console.log('[Copyright] Đã khởi tạo module bản quyền + lightbox xem ảnh full.');
+        })();
+    </script>
+</body>
+</html>
