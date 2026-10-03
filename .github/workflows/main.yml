@@ -62,7 +62,7 @@ jobs:
       - name: Kiểm tra kết quả build
         shell: pwsh
         run: |
-          $exe = "build/bin/VKSMVeditorPro.exe"
+          $exe = "build/bin/VKSeditorPro.exe"
           if (-not (Test-Path $exe)) { throw "Khong tim thay $exe - build that bai" }
           $size = (Get-Item $exe).Length
           Write-Host ("Build thanh cong: {0} ({1:N0} byte)" -f $exe, $size)
@@ -73,9 +73,9 @@ jobs:
         run: |
           $ver = (Get-Content wails.json -Raw | ConvertFrom-Json).info.productVersion
           "VERSION=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
-          Compress-Archive -Path build/bin/VKSMVeditorPro.exe -DestinationPath "VKSMVeditorPro-$ver-win64.zip" -Force
-          $hash = (Get-FileHash "VKSMVeditorPro-$ver-win64.zip" -Algorithm SHA256).Hash.ToLower()
-          "$hash  VKSMVeditorPro-$ver-win64.zip" | Out-File -FilePath "SHA256SUMS.txt" -Encoding ascii
+          Compress-Archive -Path build/bin/VKSeditorPro.exe -DestinationPath "VKSeditorPro-$ver-win64.zip" -Force
+          $hash = (Get-FileHash "VKSeditorPro-$ver-win64.zip" -Algorithm SHA256).Hash.ToLower()
+          "$hash  VKSeditorPro-$ver-win64.zip" | Out-File -FilePath "SHA256SUMS.txt" -Encoding ascii
           Get-Content SHA256SUMS.txt
 
       # Mọi lần chạy đều tải được exe ở mục Artifacts của lần chạy đó
@@ -94,5 +94,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            VKSMVeditorPro-${{ env.VERSION }}-win64.zip
+            VKSeditorPro-${{ env.VERSION }}-win64.zip
             SHA256SUMS.txt
