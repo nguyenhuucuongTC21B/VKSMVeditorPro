@@ -1,0 +1,98 @@
+name: Build Windows EXE (VKSMVeditorPro)
+
+# Build tự động khi:
+#  - push code lên nhánh main/master
+#  - push một tag dạng v1.2.0 (sẽ tạo GitHub Release kèm file exe)
+#  - hoặc bấm nút "Run workflow" trong tab Actions
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows:
+    name: Build Windows x64
+    runs-on: windows-latest
+    permissions:
+      contents: write   # cần quyền này để tạo Release khi push tag
+
+    steps:
+      - name: Lấy mã nguồn
+        uses: actions/checkout@v4
+
+      - name: Cài Go (đúng phiên bản trong go.mod)
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      # FFmpeg ~105MB không nằm trong mã nguồn (vượt giới hạn 100MB của GitHub),
+      # CI tự tải bản essentials 8.0 chính xác như bản nhúng trong exe.
+      - name: Tải FFmpeg essentials về internal/ffmpegbin
+        shell: pwsh
+        run: |
+          $dest = "internal/ffmpegbin/ffmpeg-essentials.zip"
+          $url  = "https://github.com/GyanD/codexffmpeg/releases/download/8.0/ffmpeg-8.0-essentials_build.zip"
+          Write-Host "Dang tai FFmpeg essentials (~105 MB) tu mirror GyanD..."
+          Invoke-WebRequest -Uri $url -OutFile $dest
+          $size = (Get-Item $dest).Length
+          if ($size -lt 90MB) { throw "Tai FFmpeg that bai (kich thuoc $size byte qua nho)" }
+          Write-Host "FFmpeg OK: $size byte"
+
+      - name: Kiểm tra mã nguồn (go vet)
+        shell: pwsh
+        run: go vet ./...
+
+      - name: Cài Wails CLI v2.16.0
+        shell: pwsh
+        run: |
+          go install github.com/wailsapp/wails/v2/cmd/wails@v2.16.0
+          "$env:USERPROFILE\go\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      # -s: bỏ qua bước build frontend (frontend/dist đã có sẵn trong mã nguồn)
+      - name: Build exe (windows/amd64)
+        shell: pwsh
+        run: wails build -platform windows/amd64 -s
+
+      - name: Kiểm tra kết quả build
+        shell: pwsh
+        run: |
+          $exe = "build/bin/VKSMVeditorPro.exe"
+          if (-not (Test-Path $exe)) { throw "Khong tim thay $exe - build that bai" }
+          $size = (Get-Item $exe).Length
+          Write-Host ("Build thanh cong: {0} ({1:N0} byte)" -f $exe, $size)
+          if ($size -lt 100MB) { throw "exe qua nho ($size byte) - FFmpeg chua duoc nhung" }
+
+      - name: Đóng gói ZIP + SHA-256
+        shell: pwsh
+        run: |
+          $ver = (Get-Content wails.json -Raw | ConvertFrom-Json).info.productVersion
+          "VERSION=$ver" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Compress-Archive -Path build/bin/VKSMVeditorPro.exe -DestinationPath "VKSMVeditorPro-$ver-win64.zip" -Force
+          $hash = (Get-FileHash "VKSMVeditorPro-$ver-win64.zip" -Algorithm SHA256).Hash.ToLower()
+          "$hash  VKSMVeditorPro-$ver-win64.zip" | Out-File -FilePath "SHA256SUMS.txt" -Encoding ascii
+          Get-Content SHA256SUMS.txt
+
+      # Mọi lần chạy đều tải được exe ở mục Artifacts của lần chạy đó
+      - name: Tải lên artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VKSeditorPro-${{ env.VERSION }}-win64
+          path: |
+            VKSeditorPro-${{ env.VERSION }}-win64.zip
+            SHA256SUMS.txt
+          if-no-files-found: error
+
+      # Chỉ khi push tag v... : tạo Release và đính kèm exe để mọi người tải
+      - name: Tạo GitHub Release (khi push tag v*)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            VKSMVeditorPro-${{ env.VERSION }}-win64.zip
+            SHA256SUMS.txt
